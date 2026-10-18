@@ -1,5 +1,9 @@
 node_modules/
 dist/
+target/
+testversion-build/
+testversion/*.html
+apps/desktop/src-tauri/gen/
 .env
 .env.*
 !.env.example

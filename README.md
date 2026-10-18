@@ -1,84 +1,99 @@
-# Neues Projekt
+# Black sheep
 
-Ein eigenständiges neues Codeprojekt als Grundlage für unsere nächste Anwendung. Technische Basis: React, TypeScript und Vite, ähnlich dem früheren Blacksheep-Projekt. Das frühere Projekt wird nicht verändert oder kopiert.
+**Ein lokales, quelloffenes LaTeX-Studio mit Synapse-Themen und freiwilliger Forschungssuche.** MIT-Lizenz.
 
-Projektname und Produktfunktionen sind noch offen. Die vorhandene Startseite ist eine lauffähige Grundlage, keine fertige Fachanwendung.
+Black sheep hat einen dunklen Arbeitsbereich mit Dokumentstruktur links, LaTeX-Quelltext rechts und den aus der Gliederung abgeleiteten Themen darunter. Es ist eine konkrete Umsetzung des jüngeren LaTeX-only-Produktstands der Entwicklerübergabe. Der ältere C-/VS-Code-Plan gilt für diese Ausgabe nicht.
 
-## Starten
+## Direkt benutzen
 
-Voraussetzung: Node.js 24.13 oder neuer. Unter Windows `Starten.cmd` doppelklicken. Alternativ im Projektordner:
+- Windows: `Starten.cmd` doppelklicken. Beim ersten Start werden die gepinnten JavaScript-Abhängigkeiten installiert.
+- Bereits erzeugte Einzeldatei: `testversion/Black-sheep-Testversion.html` im Browser öffnen. Dafür ist kein Server nötig. Die Einzeldatei wird mit dem unten angegebenen Befehl aus denselben Quellen erstellt.
+- Entwicklung: <http://127.0.0.1:5174>. Der feste Port vermeidet eine Kollision mit dem älteren HTL-Projekt auf 5173.
 
-```powershell
-npm ci
-npm run dev
+Voraussetzung für die Entwicklung: Node.js **24.13 oder neuer** und pnpm **11.25.0**.
+
+```sh
+npm install --global pnpm@11.25.0
+pnpm install --frozen-lockfile
+pnpm dev
 ```
 
-Die lokale App läuft auf <http://127.0.0.1:5174>. Port 5174 ist absichtlich fest, damit sich dieses Projekt nicht mit der bestehenden Lernapp auf Port 5173 überschneidet. Beenden mit Strg+C. Falls der Port belegt ist, den anderen Prozess beenden oder `npm run dev -- --port 5175` verwenden.
+Die eigentliche App startet offline. Nur die separat aktivierte Forschungssuche braucht eine Internetverbindung.
 
-## Code bearbeiten
+## Was funktioniert
 
-Den gesamten Projektordner in Codex oder einem Codeeditor öffnen. Änderungen speichern; Vite aktualisiert die Browseransicht automatisch.
+1. **LaTeX bearbeiten:** lokal gebündelter Monaco-Editor oder umschaltbarer einfacher Texteditor. Dokumenttitel, Abschnitte und Formeln aktualisieren die Strukturansicht.
+2. **Bausteine ergänzen:** Abschnitte, Unterabschnitte, Formeln, Aufzählungen, Seitenumbrüche, Ränder und Seitenköpfe. Benötigte Pakete werden ohne Duplikate ergänzt. Fehlende Dokumentgrenzen liefern einen Fehler und lassen den Entwurf unverändert.
+3. **Tabellen:** Raster für 1–8 Zeilen und Spalten, auch mit Pfeiltasten bedienbar.
+4. **Diagramme:** `Label;Wert` mit 1–12 Zeilen; Dezimalpunkt und Dezimalkomma. Säulen- und Liniendiagramme werden als editierbarer `pgfplots`-Quelltext eingefügt. Ungültige Zahlen oder TeX-Steuerzeichen in Kategorien werden abgewiesen.
+5. **Dateien:** `.tex` bewusst öffnen und exportieren. Im Browser ist der Export ein Download; dessen Speicherung muss im Browser geprüft werden. Die Desktopvariante verwendet sichtbare native Öffnen-/Speichern-unter-Dialoge.
+6. **Synapse:** bis zu 30 lokale Abschnittsthemen, Sprung zur Quelltextzeile im Monaco-Editor. Optional je Thema Crossref-Metadaten für Forschungsartikel und Dissertationen suchen.
 
-```text
-neues-projekt/
-├── src/
-│   ├── App.tsx       # Startansicht und spätere Funktionen
-│   ├── main.tsx      # Einstiegspunkt
-│   └── styles.css    # Gestaltung
-├── index.html       # HTML-Grundgerüst
-├── vite.config.ts   # Entwicklungs- und Build-Konfiguration
-├── tsconfig.json    # TypeScript-Einstellungen
-├── package.json     # Abhängigkeiten und Befehle
-├── package-lock.json
-├── Starten.cmd      # Windows-Schnellstart
-└── README.md
-```
+Es gibt kein stilles Autosave. Vor dem Verlassen eines geänderten Entwurfs warnt der Browser. Ein Browserdownload setzt den Änderungszustand bewusst nicht auf „sicher gespeichert“ zurück. Das Dokumentlimit beträgt 200.000 Zeichen.
+
+## Forschung und Datenschutz
+
+Die Forschungssuche ist standardmäßig aus. Nach Freigabe startet erst ein zusätzlicher Klick auf **Forschung finden** die Anfrage. Nur der gewählte Abschnittstitel wird an `https://api.crossref.org/works` gesendet, niemals der vollständige Entwurf.
+
+- Zwei ausdrücklich gefilterte Abfragen: `journal-article` und `dissertation`, je höchstens sechs Metadatentreffer.
+- Höchstens zehn validierte, deduplizierte Ergebnisse; neun Sekunden Zeitgrenze und 300 kB pro Antwort.
+- Keine Cookies/Anmeldedaten an Crossref, kein Referrer und keine HTTP-Weiterleitungen.
+- DOI-Links ausschließlich aus einer validierten DOI und dem festen Host `https://doi.org`; fremde URL-/HTML-Felder werden nicht übernommen.
+- Das abschaltbare Erstanbieter-Cookie `bs_research` merkt die Freigabe für 30 Tage (`SameSite=Strict`, `Path=/`, `Secure` bei HTTPS). Bei `file://` ohne Cookies dient der Sitzungsspeicher als Fallback. Es enthält keine Dokumentdaten.
+- Widerruf bricht laufende Recherche ab und entfernt angezeigte Treffer. Netzwerk-/CORS-/Limitfehler sind sichtbar und beeinträchtigen den lokalen Editor nicht.
+
+Metadaten sind Forschungshinweise. Sie beweisen keine fachliche Übereinstimmung, keinen Peer Review und keinen freien Volltextzugang. Es gibt keine Telemetrie, Cloud-AI, Embeddings oder automatischen Agenten.
 
 ## Prüfen und bauen
 
-```powershell
-npm run check
-npm run preview
+```sh
+pnpm quality
+pnpm testversion:build
+pnpm desktop:bundle-check
 ```
 
-`check` prüft TypeScript und erzeugt den Produktionsbuild in `dist/`. `preview` zeigt diesen Build unter <http://127.0.0.1:4174>. Es gibt bisher keine eigene Geschäftslogik und deshalb noch keine automatisierten Funktionstests.
+`quality` führt die Verhaltenstests der Transformationen und Forschungstransporte sowie TypeScript Strict und den Frontend-Build aus. `testversion:build` erzeugt eine eigenständige HTML-Datei mit CSP und gehashtem Inline-Skript. Monaco und dessen Worker werden aus lokalen Paketen gebaut; es gibt keine CDN-Abhängigkeit. Die Einzeldatei startet standardmäßig mit dem einfachen Editor.
 
-## Git und GitHub
+Die native Desktopvariante verwendet Tauri 2. Rust ist über `rust-toolchain.toml` gepinnt. Für Windows werden zusätzlich Microsoft C++ Build Tools und das Windows SDK benötigt; für andere Systeme gelten die [offiziellen Tauri-Voraussetzungen](https://v2.tauri.app/start/prerequisites/).
 
-Dieses Projekt hat ein eigenes Git-Repository auf dem Branch `main`. Die lokale Versionsverwaltung funktioniert unabhängig von einer GitHub-Anmeldung.
-
-```powershell
-git status
-git log --oneline
+```sh
+pnpm desktop:dev
+pnpm desktop:build
 ```
 
-Das private Online-Repository gehört dem im Browser angemeldeten Konto **THYPHONSIS**:
+Native Fähigkeiten gelten nur für das Hauptfenster. Öffnen/Speichern erteilen über den offiziellen Dialog-Plugin ausschließlich Zugriff auf ausgewählte Dateien; keine rekursiven Home-/Dokumentordnerrechte und keine Shell-Capability. Vorhandene Dateien werden nur nach bewusstem Speichern-unter-Vorgang ersetzt. Native Dialog-, Download- und Plattformverhalten müssen auf dem Zielsystem gesondert geprüft werden.
 
-[GitHub: THYPHONSIS/neues-projekt](https://github.com/THYPHONSIS/neues-projekt)
+## Code finden
 
-Der Startcode wird im zum Repository gehörenden Codespace veröffentlicht. Der lokale Ordner und das Online-Repository verwenden dieselbe Git-Historie auf `main`.
-
-[Code direkt im Browser öffnen](https://github.dev/THYPHONSIS/neues-projekt)
-
-Die lokale Git-Kommandozeile benötigt für spätere Online-Zugriffe eine eigene GitHub-Anmeldung, zum Beispiel über GitHub Desktop. Danach Änderungen wie üblich speichern und veröffentlichen:
-
-```powershell
-git add src
-git commit -m "Add first feature"
-git push
+```text
+apps/desktop/src/
+├── App.tsx                     # Arbeitsfläche und bewusste Benutzeraktionen
+├── components/MonacoEditor.tsx  # lokaler Editor und Fallback
+├── components/TablePicker.tsx   # Tabellenraster und Tastaturbedienung
+├── domain/latex.ts              # begrenzte Struktur und sichere Bausteine
+├── domain/research.ts           # feste Queries und Metadatenvalidierung
+├── domain/researchClient.ts     # Abbruch, Größenlimit, Credentials-Regeln
+├── domain/consent.ts            # Freigabe-Cookie/Sitzungsfallback
+├── domain/nativeFiles.ts        # explizite Dateidialoge
+└── styles/app.css
+apps/desktop/src-tauri/          # minimaler Tauri-Kern und Capabilities
+tests/                          # ausführbare Verhaltenstests
+scripts/                        # Einzel-HTML und Bundle-Prüfung
+docs/architecture.md            # aktive Architektur und Grenzen
 ```
 
-Neue Änderungen von GitHub mit `git pull` übernehmen. Zugangsdaten gehören weder in den Code noch in diese Anleitung.
+## Bewusste Grenzen
 
-Der lokale Ordner kann in GitHub Desktop über **File → Add local repository** oder in Codex als vorhandener Projektordner geöffnet werden. Alternativ das Online-Repository neu klonen; eine solche Kopie enthält bereits die Online-Historie.
+Die Dokumentansicht ist eine begrenzte Texterkennung, kein vollständiger LaTeX-Parser und kein gesetztes PDF. Komplexe Makros und Verbatim-Inhalte werden nicht vollständig semantisch aufgelöst. Diagramme werden erst in einem externen TeX-Lauf gesetzt. Ein Compiler für beliebige Benutzerdokumente ist nicht eingebaut; `-no-shell-escape` allein wäre keine sichere TeX-Sandbox.
 
-## Nächster Entwicklungsschritt
+Es gibt kein Excel-kompatibles Arbeitsblatt, keine aktive Workspace-Überwachung, keinen semantischen Knowledge Graph, keinen Skill-Tree und keine autonomen Lernagenten. Diese älteren beziehungsweise späteren Ziele werden nicht als vorhandene Funktionen ausgegeben. Die Browser-Testversion und native Desktopfreigabe sind getrennte Nachweise.
 
-1. Namen und Zweck der neuen Anwendung festlegen.
-2. Die erste echte Funktion in `src/App.tsx` umsetzen.
-3. Bei Bedarf Backend, Datenbank und passende Tests ergänzen.
+## Öffentlicher Quellcode
 
-## Technische Referenzen
+[GitHub: THYPHONSIS/black-sheep](https://github.com/THYPHONSIS/black-sheep) · [Code im Browser bearbeiten](https://github.dev/THYPHONSIS/black-sheep)
 
-- [Vite: Einstieg und Befehle](https://vite.dev/guide/)
-- [React: Dokumentation](https://react.dev/learn)
+Änderungen bleiben in einem normalen Git-Repository auf `main`. Für lokale spätere `git push`-Befehle ist eine eigene GitHub-Anmeldung nötig; alternativ im zum Repository gehörenden Codespace arbeiten. Keine Zugangsdaten gehören in Code, URLs oder Logs.
+
+## Mitentwickeln
+
+Issue mit reproduzierbaren Schritten anlegen, Branch erstellen, passende Verhaltenstests und `pnpm quality` ausführen. Sicherheitsprobleme nicht mit privaten Dokumenten oder Zugangsdaten als öffentliches Issue reproduzieren. Die MIT-Lizenz steht in `LICENSE`.

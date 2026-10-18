@@ -3,11 +3,12 @@ setlocal
 cd /d "%~dp0"
 where npm.cmd >nul 2>nul
 if errorlevel 1 goto :missing_node
-if exist "node_modules\.bin\vite.cmd" goto :start
-call npm.cmd ci
+if exist "apps\desktop\node_modules\.bin\vite.cmd" goto :start
+call npx.cmd --yes pnpm@11.25.0 install --frozen-lockfile
 if errorlevel 1 goto :failed
 :start
-call npm.cmd run dev -- --open
+echo Black sheep startet unter http://127.0.0.1:5174
+call npx.cmd --yes pnpm@11.25.0 dev
 if errorlevel 1 goto :failed
 exit /b 0
 :missing_node
