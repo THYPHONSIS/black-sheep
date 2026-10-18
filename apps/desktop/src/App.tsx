@@ -5,7 +5,8 @@ import { INITIAL_DOCUMENT } from './domain/document';
 import { readResearchConsent, storeResearchConsent } from './domain/consent';
 import { fetchResearch } from './domain/researchClient';
 import type { ResearchItem } from './domain/research';
-import { isDesktop, openNativeTex, saveNativeTex } from './domain/nativeFiles';
+import * as nativeFiles from './domain/nativeFiles';
+import type { NativeFileService } from './domain/nativeFiles';
 import TablePicker from './components/TablePicker';
 
 const MonacoEditor = lazy(() => import('./components/MonacoEditor'));
@@ -27,10 +28,12 @@ Hier beginnt dein Text.`},
   header: {body: '', packages: ['fancyhdr'], preamble: [String.raw`\pagestyle{fancy}`, String.raw`\fancyhead[L]{Mein Dokument}`, String.raw`\fancyhead[R]{\thepage}`]},
 } satisfies Record<string, LatexBlock>;
 
-export default function App() {
+export default function App({files = nativeFiles}: {files?: NativeFileService} = {}) {
   const [source, setSource] = useState(INITIAL_DOCUMENT);
   const [savedSource, setSavedSource] = useState(INITIAL_DOCUMENT);
   const [fileName, setFileName] = useState('licht-und-interferenz.tex');
+  const [nativeRevision, setNativeRevision] = useState<number>();
+  const [fileBusy, setFileBusy] = useState(false);
   const [tab, setTab] = useState<typeof tabs[number]>('Start');
   const [tableOpen, setTableOpen] = useState(false);
   const [chartData, setChartData] = useState('Label;Wert\nMessung A;1,5\nMessung B;2,8\nMessung C;2,1');
@@ -92,25 +95,37 @@ export default function App() {
   function canReplace() { return !dirty || window.confirm('Dein Entwurf ist geändert. Hast du ihn exportiert? Aktuellen Entwurf ersetzen?'); }
 
   async function openFile() {
+    if (fileBusy) return;
     if (!canReplace()) return;
-    if (!isDesktop()) {input.current?.click(); return;}
+    if (!files.isDesktop()) {input.current?.click(); return;}
+    setError('');
+    setFileBusy(true);
     try {
-      const document = await openNativeTex();
-      if (document) loadDocument(document.source, document.name);
+      const document = await files.openNativeTex();
+      if (document) loadDocument(document.source, document.name, document.revision);
+      else setMessage('Öffnen abgebrochen. Das aktuelle Dokument bleibt geöffnet.');
     } catch (cause) {setError(cause instanceof Error ? cause.message : String(cause));}
+    finally {setFileBusy(false);}
   }
 
-  function loadDocument(value: string, name: string) {
+  function loadDocument(value: string, name: string, revision?: number) {
     if (value.length > MAX_DOCUMENT_LENGTH) {setError('Die Datei überschreitet 200.000 Zeichen.'); return;}
+    if (revision === undefined) files.clearNativeDocument();
     controller.current?.abort();
+    setNativeRevision(revision);
     setSource(value); setSavedSource(value); setFileName(name); setResearch({}); setResearchErrors({}); setLoading(''); setError('');
     setMessage('Datei geöffnet. Änderungen werden erst auf deinen Befehl gespeichert.');
   }
 
   async function exportFile() {
+    if (fileBusy) return;
+    setError('');
+    setFileBusy(true);
     try {
-      if (isDesktop()) {
-        if (await saveNativeTex(source, fileName)) {setSavedSource(source); setMessage('LaTeX-Datei am ausgewählten Ort gespeichert.');}
+      if (files.isDesktop()) {
+        const saved = await files.saveNativeTex(source, fileName);
+        if (saved) {setSavedSource(source); setFileName(saved.name); setNativeRevision(saved.revision); setMessage('LaTeX-Datei am ausgewählten Ort gespeichert.');}
+        else setMessage('Speichern abgebrochen. Dein Entwurf bleibt geöffnet.');
         return;
       }
       const url = URL.createObjectURL(new Blob([source], {type: 'application/x-tex;charset=utf-8'}));
@@ -120,6 +135,7 @@ export default function App() {
       setTimeout(() => URL.revokeObjectURL(url), 30_000);
       setMessage('Export angefordert. Bitte den Browserdownload prüfen; es gibt kein stilles Autosave.');
     } catch (cause) {setError(cause instanceof Error ? cause.message : String(cause));}
+    finally {setFileBusy(false);}
   }
 
   function updateConsent(enabled: boolean) {
@@ -141,7 +157,7 @@ export default function App() {
     } finally {if (controller.current === request) setLoading('');}
   }
 
-  const sourceInput = <textarea ref={plainEditor} aria-label="LaTeX-Quelltext" className="fallback-editor" value={source} maxLength={MAX_DOCUMENT_LENGTH} spellCheck={false} onChange={event => change(event.target.value)} />;
+  const sourceInput = <textarea ref={plainEditor} aria-label="LaTeX-Quelltext" className="fallback-editor" value={source} readOnly={fileBusy} maxLength={MAX_DOCUMENT_LENGTH} spellCheck={false} onChange={event => change(event.target.value)} />;
 
   return <div className="app-shell">
     <header className="app-header">
@@ -151,7 +167,7 @@ export default function App() {
     </header>
 
     <nav className="ribbon-tabs" aria-label="Werkzeugseiten">{tabs.map(name => <button key={name} className={tab === name ? 'tab active' : 'tab'} aria-pressed={tab === name} onClick={() => {setTab(name); setTableOpen(false);}}>{name}</button>)}<span className="ribbon-hint">LAΤEX · OFFLINE BEREIT</span></nav>
-    <section className="ribbon" aria-label={`${tab}-Werkzeuge`}>
+    <section className="ribbon" aria-label={`${tab}-Werkzeuge`} inert={fileBusy} aria-busy={fileBusy}>
       {tab === 'Start' && <><button onClick={() => {if (canReplace()) loadDocument(INITIAL_DOCUMENT, 'licht-und-interferenz.tex');}}>Neues Dokument</button><button onClick={() => void openFile()}>.tex öffnen</button><button className="accent-button" onClick={() => void exportFile()}>.tex exportieren <span aria-hidden="true">↓</span></button><span className="tool-separator" /><button onClick={() => insert(snippet.section)}>Abschnitt</button><button onClick={() => insert(snippet.formula)}>Formel</button></>}
       {tab === 'Einfügen' && <><button onClick={() => insert(snippet.section)}>Abschnitt</button><button onClick={() => insert(snippet.subsection)}>Unterabschnitt</button><button onClick={() => insert(snippet.formula)}>Formel</button><button onClick={() => insert(snippet.list)}>Aufzählung</button><div className="table-anchor"><button aria-expanded={tableOpen} onClick={() => setTableOpen(value => !value)}>Tabelle <span aria-hidden="true">▾</span></button>{tableOpen && <TablePicker onSelect={(rows, columns) => insert(buildLatexTable(rows, columns))} />}</div><button onClick={() => insert(snippet.page)}>Seitenumbruch</button></>}
       {tab === 'Daten' && <><label className="data-label" htmlFor="chart-data">Diagrammdaten <small>Label;Wert · bis zu 12 Zeilen</small></label><textarea id="chart-data" aria-label="Diagrammdaten" className="chart-input" value={chartData} maxLength={10_000} onChange={event => setChartData(event.target.value)} /><button onClick={() => insertChart('bar')}>Säulendiagramm einfügen</button><button onClick={() => insertChart('line')}>Liniendiagramm einfügen</button><small className="tool-note">Erzeugt bearbeitbaren pgfplots-Quelltext.</small></>}
@@ -162,10 +178,12 @@ export default function App() {
       event.target.value = '';
       if (!file) return;
       if (!/\.tex$/i.test(file.name) || file.size > MAX_DOCUMENT_LENGTH * 4) {setError('Bitte eine .tex-Datei mit höchstens 200.000 Zeichen wählen.'); return;}
+      setFileBusy(true);
       try {loadDocument(await file.text(), file.name);} catch {setError('Die Datei konnte nicht gelesen werden.');}
+      finally {setFileBusy(false);}
     }} />
 
-    <div className="status-line" role="status"><span className="file-name">{fileName} {dirty && <span className="dirty-dot" aria-label="Ungespeicherte Änderungen">●</span>}</span><span>{error || message}</span><span>{source.length.toLocaleString('de-DE')} Zeichen</span></div>
+    <div className="status-line" role="status"><span className="file-name">{fileName} {nativeRevision !== undefined && <span className="muted"> · Stand {nativeRevision} dieser Sitzung</span>} {dirty && <span className="dirty-dot" aria-label="Ungespeicherte Änderungen">●</span>}</span><span>{error || (fileBusy ? 'Dateiaktion läuft …' : message)}</span><span>{source.length.toLocaleString('de-DE')} Zeichen</span></div>
     {error && <div role="alert" className="error-banner">{error}<button aria-label="Fehlermeldung schließen" onClick={() => setError('')}>×</button></div>}
 
     <main>
@@ -177,7 +195,7 @@ export default function App() {
         </section>
         <section className="panel editor-panel" aria-label="Quelltext-Editor">
           <div className="panel-heading"><h2>LaTeX-Quelltext</h2><label className="editor-toggle"><input type="checkbox" checked={simpleEditor} onChange={event => setSimpleEditor(event.target.checked)} /> Einfacher Editor</label></div>
-          <div className="editor-body">{simpleEditor ? sourceInput : <Suspense fallback={<div className="editor-loading">Editor wird lokal geladen …</div>}><MonacoEditor value={source} onChange={change} onError={setError} navigation={navigation} /></Suspense>}</div>
+          <div className="editor-body">{simpleEditor ? sourceInput : <Suspense fallback={<div className="editor-loading">Editor wird lokal geladen …</div>}><MonacoEditor value={source} onChange={change} onError={setError} navigation={navigation} readOnly={fileBusy} /></Suspense>}</div>
           <div className="editor-footer"><span>LaTeX · UTF-8</span><span>Keine automatische Ausführung</span></div>
         </section>
       </div>
@@ -193,7 +211,7 @@ export default function App() {
             <button className="research-button" disabled={!consent || Boolean(loading)} onClick={() => void findResearch(topic)}>{loading === key ? 'Forschung wird gesucht …' : 'Forschung finden'} <span aria-hidden="true">↗</span></button>
             {researchErrors[key] && <p role="alert" className="research-error">{researchErrors[key]}</p>}
             {results && <div className="research-results">{results.length === 0 ? <p>Keine passenden Metadatentreffer gefunden.</p> : results.map(item => <a href={item.url} key={item.doi} target="_blank" rel="noopener noreferrer" onClick={event => {
-              if (!isDesktop()) return;
+              if (!files.isDesktop()) return;
               event.preventDefault();
               import('@tauri-apps/plugin-opener').then(({openUrl}) => openUrl(item.url)).catch(() => setMessage('Der DOI-Link konnte nicht geöffnet werden. Bitte die DOI unter dem Treffer kopieren und im Browser öffnen.'));
             }}><span>{item.kind === 'dissertation' ? 'Dissertation' : 'Forschungsartikel'}{item.year ? ` · ${item.year}` : ''}</span><strong>{item.title}</strong><small>{item.doi}</small></a>)}</div>}

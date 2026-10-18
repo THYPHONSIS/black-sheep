@@ -20,7 +20,13 @@ Akzeptiert, 2026-10-17. Keine Netzverbindung für den Kernstart. Eine Einwilligu
 
 Akzeptiert, 2026-10-17. Der offizielle Tauri-Dialog-Plugin erweitert den Dateisystemscope zur Laufzeit ausschließlich um gewählte Dateien. Die Capability enthält nur die tatsächlich verwendeten Dialog-/Text-/Stat-Kommandos, keine globale Verzeichnisfreigabe. Speichern öffnet immer einen sichtbaren Speichern-unter-Dialog. Es gibt keine unbeaufsichtigten Schreibvorgänge, keine automatische Projektüberwachung und kein dauerhaft gespeichertes Dateipfadregister.
 
-Ein allgemeines revisionsgesichertes Überschreiben mit atomarer Speicherung und Konfliktprüfung ist weiterhin ein gesonderter Ausbau. Nicht als implementiert behaupten. Browserdownloads werden als angefordert bezeichnet, nicht als garantiert auf Disk gesichert.
+Der ausgewählte Pfad, der gelesene Inhalt und ein sitzungsbezogener Stand bleiben jetzt im Arbeitsspeicher. Vor dem erneuten Schreiben an diesen Pfad vergleicht die Sitzung nach dem Speicherdialog den aktuellen Inhalt mit der geöffneten beziehungsweise zuletzt gespeicherten Fassung. Beobachtete externe Änderungen verhindern den Schreibaufruf; der Nutzer kann unter einem neuen Namen speichern oder die externe Fassung öffnen. Erst ein erfolgreiches Schreiben ändert den gespeicherten Stand und den angezeigten tatsächlichen Dateinamen. Abbruch und Fehler lösen die Aktionssperre, ohne die letzte erfolgreiche Fassung fortzuschreiben.
+
+Während einer Dateiaktion bleiben Dokument und Werkzeuge gesperrt; auch ein Wechsel zum einfachen Editor hebt diese Sperre nicht auf. Ein neues Dokument verwirft den bisherigen Sitzungspfad. Es gibt kein persistentes Pfadregister und keine stillen Folgezugriffe nach App-Neustart.
+
+Diese Inhaltsprüfung ist optimistisch: keine atomare Compare-and-swap-Operation, keine Garantie gegen Symlink-/Hardlink-Aliase oder einen weiteren Schreibvorgang zwischen Vergleich und Schreiben. Atomare Speicherung mit Dateiidentität und Wiederherstellung bleibt eine eigene nächste Etappe. Ein fehlgeschlagener Betriebssystem-Schreibvorgang kann vor dieser Etappe bereits teilweise Daten geschrieben haben. Browserdownloads werden als angefordert bezeichnet, nicht als garantiert auf Disk gesichert.
+
+`test/native-session.html` ist eine reine Entwicklungsoberfläche mit simulierten Dialogen und speicherinternem Datenträger. Sie verwendet den echten App-/Sitzungscode zur UI-Prüfung; der normale Produktionsbuild enthält sie nicht. Diese Prüfung ersetzt keine Windows-WebView-/Dateidialog-E2E-Abnahme.
 
 ## ADR-005: Kein unisolierter Compiler
 

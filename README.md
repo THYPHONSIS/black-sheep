@@ -61,7 +61,9 @@ pnpm desktop:dev
 pnpm desktop:build
 ```
 
-Native Fähigkeiten gelten nur für das Hauptfenster. Öffnen/Speichern erteilen über den offiziellen Dialog-Plugin ausschließlich Zugriff auf ausgewählte Dateien; keine rekursiven Home-/Dokumentordnerrechte und keine Shell-Capability. Vorhandene Dateien werden nur nach bewusstem Speichern-unter-Vorgang ersetzt. Native Dialog-, Download- und Plattformverhalten müssen auf dem Zielsystem gesondert geprüft werden.
+Native Fähigkeiten gelten nur für das Hauptfenster. Öffnen/Speichern erteilen über den offiziellen Dialog-Plugin ausschließlich Zugriff auf ausgewählte Dateien; keine rekursiven Home-/Dokumentordnerrechte und keine Shell-Capability. Vorhandene Dateien werden nur nach bewusstem Speichern-unter-Vorgang ersetzt. Bei der aktuell geöffneten Datei verhindert eine nach dem Dialog beobachtete externe Inhaltsänderung den Schreibaufruf. Der tatsächliche Dateiname und der Stand dieser Sitzung werden nach Erfolg angezeigt. Abbruch oder Fehler bestätigen keinen gespeicherten Stand; parallele Dateiaktionen und Bearbeitung während des Dialogs sind gesperrt.
+
+Das ist eine optimistische Inhaltsprüfung, noch keine atomare oder alias-sichere Speichertransaktion. Native Dialog-, Download- und Plattformverhalten müssen auf dem Zielsystem gesondert geprüft werden. Der [Etappenplan](docs/plans/2026-10-18-black-sheep-delivery.md) beschreibt den weiteren Ausbau.
 
 ## Code finden
 
