@@ -1,2 +1,4 @@
 packages:
   - apps/*
+overrides:
+  'monaco-editor>dompurify': 3.4.16

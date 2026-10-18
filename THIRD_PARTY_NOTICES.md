@@ -476,7 +476,7 @@ This software is provided by the copyright holders and contributors “as is” 
 
 ```
 
-## dompurify@3.4.15
+## dompurify@3.4.16
 
 License: (MPL-2.0 OR Apache-2.0).
 
