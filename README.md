@@ -88,7 +88,7 @@ Die Dokumentansicht ist eine begrenzte Texterkennung, kein vollständiger LaTeX-
 
 Es gibt kein Excel-kompatibles Arbeitsblatt, keine aktive Workspace-Überwachung, keinen semantischen Knowledge Graph, keinen Skill-Tree und keine autonomen Lernagenten. Diese älteren beziehungsweise späteren Ziele werden nicht als vorhandene Funktionen ausgegeben. Die Browser-Testversion und native Desktopfreigabe sind getrennte Nachweise.
 
-## Öffentlicher Quellcode
+## Quellcode auf GitHub
 
 [GitHub: THYPHONSIS/black-sheep](https://github.com/THYPHONSIS/black-sheep) · [Code im Browser bearbeiten](https://github.dev/THYPHONSIS/black-sheep)
 

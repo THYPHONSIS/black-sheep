@@ -32,4 +32,4 @@ Bearbeiten → begrenzte lokale Struktur → Dokument-/Themenansicht. Einfügen 
 
 ## Reproduzierbarkeit
 
-JavaScript-Abhängigkeiten über pnpm-lock.yaml, Rust-Toolchain über rust-toolchain.toml; Cargo.lock ist vor einer nativen Buildfreigabe zu erzeugen und mitzuversionieren. Source, Testausgaben und tatsächlich geprüfte Plattformen müssen in jeder Übergabe getrennt dokumentiert werden. Großer lazy Monaco-Chunk ist eine bekannte Buildwarnung, keine ausgelagerte CDN-Abhängigkeit.
+JavaScript-Abhängigkeiten über pnpm-lock.yaml, Rust-Toolchain über rust-toolchain.toml; Cargo.lock ist erzeugt und mitversioniert. Eine native Buildfreigabe benötigt zusätzlich den tatsächlich bestandenen Zielplattform-Build. Source, Testausgaben und tatsächlich geprüfte Plattformen müssen in jeder Übergabe getrennt dokumentiert werden. Großer lazy Monaco-Chunk ist eine bekannte Buildwarnung, keine ausgelagerte CDN-Abhängigkeit.
