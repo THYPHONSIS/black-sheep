@@ -86,7 +86,9 @@ docs/architecture.md            # aktive Architektur und Grenzen
 
 ## Bewusste Grenzen
 
-Die Dokumentansicht ist eine begrenzte Texterkennung, kein vollständiger LaTeX-Parser und kein gesetztes PDF. Komplexe Makros und Verbatim-Inhalte werden nicht vollständig semantisch aufgelöst. Diagramme werden erst in einem externen TeX-Lauf gesetzt. Ein Compiler für beliebige Benutzerdokumente ist nicht eingebaut; `-no-shell-escape` allein wäre keine sichere TeX-Sandbox.
+Die Dokumentansicht verwendet einen begrenzten, nicht expandierenden LaTeX-Strukturparser und zeigt kein gesetztes PDF. Er erkennt `title`, `section`, `subsection` und `subsubsection`, geschachtelte Gruppen, optionale Kurzformen, Kommentare und literale `verb`-/`verbatim`-/`verbatim*`-Bereiche. Standarddefinitionen (`newcommand`-Familie, `def`-Familie, `newenvironment`/`renewenvironment` und `NewDocumentCommand`-/`NewDocumentEnvironment`-Familien) bleiben als gespeicherte Tokens undurchsichtig; darin stehendes `verb` wird nicht ausgeführt. Befehle in geschweiften Argumentgruppen und in Kurzformen werden nicht als eigene Themen übernommen.
+
+Themen tragen exklusive Quellbereiche in UTF-16-Zeichenpositionen sowie die ursprüngliche Zeilennummer. LF, CRLF und CR bleiben bei dieser Erkennung unterscheidbar; die Quelle wird nicht umgeschrieben. Unvollständige Gruppen liefern begrenzte Hinweise. Das ist keine TeX-Ausführung: Makroexpansion, Bedingungen, eigene Catcodes, Paketumgebungen wie `minted`/`lstlisting` und externe `input`-Dateien werden nicht semantisch aufgelöst. Die Struktur beschreibt literale Befehle im gesamten Puffer, auch außerhalb eines Dokumentbereichs. Diagramme werden erst in einem externen TeX-Lauf gesetzt. Ein Compiler für beliebige Benutzerdokumente ist nicht eingebaut; `-no-shell-escape` allein wäre keine sichere TeX-Sandbox.
 
 Es gibt kein Excel-kompatibles Arbeitsblatt, keine aktive Workspace-Überwachung, keinen semantischen Knowledge Graph, keinen Skill-Tree und keine autonomen Lernagenten. Diese älteren beziehungsweise späteren Ziele werden nicht als vorhandene Funktionen ausgegeben. Die Browser-Testversion und native Desktopfreigabe sind getrennte Nachweise.
 

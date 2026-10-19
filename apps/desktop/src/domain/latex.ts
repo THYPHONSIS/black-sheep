@@ -1,6 +1,7 @@
-export const MAX_DOCUMENT_LENGTH = 200_000;
-export type Topic = { id: string; label: string; level: number; line: number };
-export type DocumentView = { title: string; topics: Topic[]; formulas: string[]; paragraphs: string[]; warnings: string[] };
+import {MAX_DOCUMENT_LENGTH, parseDocument} from './latexParser.ts';
+import type {DocumentView} from './latexParser.ts';
+export {MAX_DOCUMENT_LENGTH};
+export type {Topic, SourceRange, DocumentView} from './latexParser.ts';
 export type Transformation = { source: string; error?: string };
 export type LatexBlock = { body: string; packages?: string[]; preamble?: string[] };
 
@@ -21,49 +22,8 @@ function withoutComments(source: string): string {
   }).join('\n');
 }
 
-function groupAt(source: string, opening: number): string {
-  let depth = 1;
-  for (let i = opening + 1; i < source.length; i++) {
-    if (source[i] === '\\') { i++; continue; }
-    if (source[i] === '{') depth++;
-    if (source[i] === '}') {
-      depth--;
-      if (depth === 0) return source.slice(opening + 1, i);
-    }
-  }
-  return '';
-}
-
-function plainText(value: string): string {
-  return value.replace(/\\([%&#_$])/g, '$1')
-    .replace(/\\[a-zA-Z]+\*?(?:\[[^\]]*\])?/g, '')
-    .replace(/[{}]/g, '').replace(/\s+/g, ' ').trim();
-}
-
 export function inspectLatex(source: string): DocumentView {
-  checkLength(source);
-  const clean = withoutComments(source);
-  const titleMatch = /\\title\s*\{/g.exec(clean);
-  const topics: Topic[] = [];
-  const section = /\\(section|subsection|subsubsection)\*?\s*(?:\[[^\]\n]*\])?\s*\{/g;
-  for (const match of clean.matchAll(section)) {
-    if (topics.length === 30) break;
-    const label = plainText(groupAt(clean, match.index + match[0].length - 1)).slice(0, 180);
-    if (!label) continue;
-    topics.push({ id: `topic-${match.index}`, label, level: ['section', 'subsection', 'subsubsection'].indexOf(match[1]!) + 1, line: clean.slice(0, match.index).split('\n').length });
-  }
-  const formulas = [...clean.matchAll(/\\\[([\s\S]*?)\\\]|\$\$([\s\S]*?)\$\$|\\begin\{equation\*?\}([\s\S]*?)\\end\{equation\*?\}/g)]
-    .slice(0, 8).map(m => (m[1] ?? m[2] ?? m[3] ?? '').trim().slice(0, 1200));
-  const begin = clean.indexOf('\\begin{document}');
-  const end = clean.indexOf('\\end{document}', begin + 1);
-  const body = begin >= 0 ? clean.slice(begin + 16, end >= 0 ? end : undefined) : clean;
-  const paragraphs = body.replace(/\\\[[\s\S]*?\\\]|\$\$[\s\S]*?\$\$/g, '')
-    .split(/\n\s*\n/).map(plainText).filter(Boolean).slice(0, 8).map(p => p.slice(0, 1600));
-  return {
-    title: titleMatch ? plainText(groupAt(clean, titleMatch.index + titleMatch[0].length - 1)) || 'Unbenanntes Dokument' : 'Unbenanntes Dokument',
-    topics, formulas, paragraphs,
-    warnings: begin < 0 || end < begin ? ['Für Einfügungen werden \\begin{document} und \\end{document} benötigt.'] : [],
-  };
+  return parseDocument(source);
 }
 
 export function applyLatexBlock(source: string, block: LatexBlock): Transformation {

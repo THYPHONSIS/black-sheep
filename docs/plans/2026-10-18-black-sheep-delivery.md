@@ -64,12 +64,13 @@ Die zehn Etappen sind eine Schätzung. Eine nicht bestandene Grenze bleibt offen
 **Files:** vorgeschlagen `apps/desktop/src/domain/latexParser.ts`, `tests/latex-parser.test.mjs`; bestehend `domain/latex.ts` und `App.tsx`.
 **Interfaces:** `parseDocument(source): DocumentView`; bestehende Felder plus Quellbereiche `{start,end,line}`. Bestehende 200.000-/30-/8-Grenzen bleiben.
 
-- [ ] Verschachtelte Titel, optionale Kurzformen, Kommentare, escaped percent, Verbatim, unvollständige Gruppen und doppelte Überschriften als Fixtures ergänzen.
-- [ ] Nachweisen, welche Fixtures die aktuelle Regex-Erkennung falsch einordnet.
-- [ ] Quellbereiche mit einem begrenzten Token-/Gruppenparser erkennen. Unvollständige Eingaben liefern Warnung und brauchbare Teilstruktur, keine erfundenen Abschnitte aus Verbatim.
-- [ ] `node --experimental-strip-types --test tests/latex-parser.test.mjs`: erwartete Titel, Bereiche und Limits vergleichen.
-- [ ] `pnpm quality` und live Gliederungssprung nach Unicode-/Kommentaränderungen prüfen.
-- [ ] Parseränderung und dokumentierte unterstützte Teilmenge separat veröffentlichen.
+- [x] Verschachtelte Titel, optionale Kurzformen, Kommentare, escaped percent, Kernel-Verbatim, unvollständige Gruppen und doppelte Überschriften als Fixtures ergänzen.
+- [x] Nachweis vor Implementierung: fünf Verhaltensprüfungen gegen bisherige Regex-Erkennung fehlgeschlagen. Weitere Randfälle für Kurzform-Befehle, leeren `verb`-Delimiter und doppelte Hinweise ebenfalls vor jeweiliger Reparatur rot.
+- [x] Quellbereiche mit einem begrenzten Token-/Gruppenparser erkennen. Unvollständige Eingaben liefern Warnung und brauchbare Teilstruktur, keine erfundenen Abschnitte aus Kernel-Verbatim. Keine Makroexpansion oder Paketumgebungs-Semantik behaupten.
+- [x] `node --experimental-strip-types --test tests/latex-parser.test.mjs`: 15 Tests für Titel, Bereiche, Randfälle, gespeicherte Definitionen und Zeilenenden erfolgreich. Reviewer-Funde wurden vor jeweiliger Reparatur zusätzlich rot reproduziert.
+- [x] Unabhängige Prüfung bestätigt Parser-Subset und Grenzen: `pnpm quality` 34/34, elf große Eingaben und weitere Definitions-/Unicode-/Literalproben, finale CSP-/Modul-/Artefaktprüfung erfolgreich.
+- [ ] Live-Gliederungssprung nach Unicode-/Kommentaränderungen sowie CR-/Textarea-Normalisierung prüfen (Browserbedienung derzeit blockiert). Native Task 3 bleibt offen.
+- [ ] Parseränderung und dokumentierte unterstützte Teilmenge separat veröffentlichen; aktuelle Web-/Windows-CI prüfen. Task 4 wurde wegen unabhängiger Dateigrenzen vor der weiter offenen nativen Task 3 bearbeitet.
 
 ### Task 5: Lokale Themenidentität und nachvollziehbare Verbindungen
 
