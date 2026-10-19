@@ -5,7 +5,7 @@ import { MAX_DOCUMENT_LENGTH } from '../domain/latex';
 
 self.MonacoEnvironment = { getWorker: () => new EditorWorker() };
 
-type Props = {value: string; onChange: (value: string) => void; onError: (message: string) => void; navigation?: {line: number}; readOnly: boolean};
+type Props = {value: string; onChange: (value: string) => void; onError: (message: string) => void; navigation?: {line: number; column: number}; readOnly: boolean};
 
 export default function MonacoEditor({value, onChange, onError, navigation, readOnly}: Props) {
   const container = useRef<HTMLDivElement>(null);
@@ -59,7 +59,7 @@ export default function MonacoEditor({value, onChange, onError, navigation, read
   useEffect(() => {
     if (navigation && instance.current) {
       instance.current.revealLineInCenter(navigation.line);
-      instance.current.setPosition({lineNumber: navigation.line, column: 1});
+      instance.current.setPosition({lineNumber: navigation.line, column: navigation.column});
       instance.current.focus();
     }
   }, [navigation]);

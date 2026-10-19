@@ -39,7 +39,7 @@ export default function App({files = nativeFiles}: {files?: NativeFileService} =
   const [chartData, setChartData] = useState('Label;Wert\nMessung A;1,5\nMessung B;2,8\nMessung C;2,1');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('Dein Dokument bleibt lokal.');
-  const [navigation, setNavigation] = useState<{line: number}>();
+  const [navigation, setNavigation] = useState<{line: number; column: number}>();
   const [simpleEditor, setSimpleEditor] = useState(import.meta.env.MODE === 'standalone');
   const [consent, setConsent] = useState(readResearchConsent);
   const [privacyOpen, setPrivacyOpen] = useState(false);
@@ -63,14 +63,17 @@ export default function App({files = nativeFiles}: {files?: NativeFileService} =
 
   function closePrivacy() {privacyDialog.current?.close(); setPrivacyOpen(false);}
 
-  function navigateTo(line: number) {
-    setNavigation({line});
+  function navigateTo(topic: Topic) {
+    const prefix = source.slice(0, topic.start);
+    const column = prefix.length - Math.max(prefix.lastIndexOf('\n'), prefix.lastIndexOf('\r'));
+    setNavigation({line: topic.line, column});
     const editor = plainEditor.current;
     if (editor) {
-      const offset = source.split('\n').slice(0, line - 1).reduce((length, text) => length + text.length + 1, 0);
+      // Textarea values normalize CRLF and CR to LF; parser offsets retain original UTF-16 positions.
+      const offset = prefix.replace(/\r\n?/g, '\n').length;
       editor.focus();
       editor.setSelectionRange(offset, offset);
-      editor.scrollTop = Math.max(0, (line - 4) * 23);
+      editor.scrollTop = Math.max(0, (topic.line - 4) * 23);
     }
   }
 
@@ -190,7 +193,7 @@ export default function App({files = nativeFiles}: {files?: NativeFileService} =
       <div className="studio-grid">
         <section className="panel document-panel" aria-label="Dokumentansicht">
           <div className="panel-heading"><h2>Dokument</h2><span className="small-tag">Strukturansicht</span></div>
-          <div className="paper-scroll"><article className="document-paper"><span className="paper-eyebrow">DEIN DOKUMENT</span><h2>{view.title}</h2>{view.topics.length > 0 && <nav aria-label="Dokumentgliederung" className="document-outline">{view.topics.map((topic, index) => <button key={topic.id} className={`outline-level-${topic.level}`} onClick={() => navigateTo(topic.line)}><span>{index + 1 < 10 ? '0' : ''}{index + 1}</span>{topic.label}<span aria-hidden="true">↗</span></button>)}</nav>}{view.paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}{view.formulas.length > 0 && <div className="formula-section"><span>FORMELN IM DOKUMENT</span>{view.formulas.map((formula, index) => <pre key={index}>{formula}</pre>)}</div>}{view.warnings.map(warning => <p className="document-warning" key={warning}>{warning}</p>)}</article></div>
+          <div className="paper-scroll"><article className="document-paper"><span className="paper-eyebrow">DEIN DOKUMENT</span><h2>{view.title}</h2>{view.topics.length > 0 && <nav aria-label="Dokumentgliederung" className="document-outline">{view.topics.map((topic, index) => <button key={topic.id} className={`outline-level-${topic.level}`} onClick={() => navigateTo(topic)}><span>{index + 1 < 10 ? '0' : ''}{index + 1}</span>{topic.label}<span aria-hidden="true">↗</span></button>)}</nav>}{view.paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}{view.formulas.length > 0 && <div className="formula-section"><span>FORMELN IM DOKUMENT</span>{view.formulas.map((formula, index) => <pre key={index}>{formula}</pre>)}</div>}{view.warnings.map(warning => <p className="document-warning" key={warning}>{warning}</p>)}</article></div>
           <p className="panel-footnote">Lokale Strukturansicht · kein gesetztes PDF. Tabellen und Diagramme erscheinen nach einem TeX-Lauf.</p>
         </section>
         <section className="panel editor-panel" aria-label="Quelltext-Editor">
